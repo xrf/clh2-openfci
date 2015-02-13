@@ -54,7 +54,7 @@ get_coulomb_ho2d() {
 }
 
 get_openfci() {
-    unpack_src_gh "$1" openfci xrf simen-openfci 0.6.2
+    unpack_src_gh "$1" openfci xrf simen-openfci 0.6.3
 }
 
 get_lpp() {
