@@ -66,8 +66,8 @@ order by `key`.
 
 A key is constructed from the indices of the matrix element
 
-    < n1, ml1; n2, ml2 | V | n3, ml3; n4, ml4 > =
-      Integral[d r] Integral[d r']
+    ⟨(n1, ml1), (n2, ml2) | V | (n3, ml3), (n4, ml4)⟩ =
+      ∫[d r] ∫[d r']
         phi[n1, ml1](r) phi[n2, ml2](r')
         phi[n3, ml3](r) phi[n4, ml4](r')
 

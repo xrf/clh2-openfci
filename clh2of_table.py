@@ -5,6 +5,7 @@ def _orbital_index(n, ml):
     return (k * (k + 2) + ml) // 2
 
 def _construct_key(n1, ml1, n2, ml2, n3, ml3, n4, ml4):
+    '''Key construction function.'''
     p1 = _orbital_index(n1, ml1)
     p2 = _orbital_index(n2, ml2)
     p3 = _orbital_index(n3, ml3)
@@ -39,7 +40,8 @@ class TableSqlite(object):
             return result[0]
 
 class TableBinary(object):
-    def __init__(self, filename, format="sqlite3"):
+
+    def __init__(self, filename):
         import os
         self._file = open(filename, "rb")
         self._size = os.stat(filename).st_size // 16
@@ -59,6 +61,7 @@ class TableBinary(object):
         imin = 0
         imax = self._size - 1
         i = imax // 2
+        # locate element using binary search
         while True:
             self._file.seek(i * 16)
             k = struct.unpack("=Q", self._file.read(8))[0]
