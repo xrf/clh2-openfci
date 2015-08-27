@@ -49,10 +49,6 @@ unpack_src_gh() {
     touch "$2.ok"
 }
 
-get_coulomb_ho2d() {
-    unpack_src_gh "$1" coulomb_ho2d xrf coulomb_ho2d 2.0.0
-}
-
 get_openfci() {
     unpack_src_gh "$1" openfci xrf simen-openfci 0.6.3
 }

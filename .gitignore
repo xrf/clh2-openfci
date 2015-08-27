@@ -20,3 +20,7 @@ a.out
 *.so
 *.sdf
 *.stackdump
+
+# Python
+__pycache__
+*.pyc

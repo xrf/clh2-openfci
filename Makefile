@@ -5,62 +5,81 @@
 # will need to modify this variable accordingly:
 liblapack=-llapack
 
-# installation prefix
-PREFIX=/usr/local
-
 # build flags
-CPPFLAGS=-Iinclude
-CFLAGS=$(allflags) -std=c99
-CXXFLAGS=$(allflags) -std=c++03
+CPPFLAGS=-Idist/include
+CFLAGS=$(allflags) -std=c99 -fPIC
+CXXFLAGS=$(allflags) -std=c++03 -fPIC
 allflags=-g -O2 -mtune=native -Wall -pedantic
-libpthread=-lpthread
 
-all: dist/bin/clh2-openfci
+all: \
+    dist/bin/clh2of-tabulate \
+    dist/bin/clh2of-pack \
+    dist/bin/clh2of-unpack
 
 clean:
 	rm -fr dist
 
-install: all
-	install -Dm755 dist/bin/clh2-openfci \
-	    $(DESTDIR)$(PREFIX)/bin/clh2-openfci
+env: all
+	PATH=dist/bin:$$PATH \
+	    LIBRARY_PATH=dist/lib$${LIBRARY_PATH+:}$$LIBRARY_PATH \
+	    LD_LIBRARY_PATH=dist/lib$${LD_LIBRARY_PATH+:}$$LD_LIBRARY_PATH \
+	    C_INCLUDE_PATH=dist/include$${C_INCLUDE_PATH+:}$$C_INCLUDE_PATH \
+	    CPLUS_INCLUDE_PATH=dist/include$${CPLUS_INCLUDE_PATH+:}$$CPLUS_INCLUDE_PATH \
+	    $(SHELL)
 
-uninstall:
-	rm -f $(DESTDIR)$(PREFIX)/bin/clh2-openfci
+.PHONY: all clean env
 
-.PHONY: all clean install uninstall
+dist/bin/clh2of-tabulate: \
+    dist/lib/libclh2of.so \
+    dist/tmp/clh2of-tabulate.o
+	mkdir -p dist/bin
+	$(CC) -o $@ \
+	    dist/tmp/clh2of-tabulate.o \
+	    -Ldist/lib -lclh2of -lsqlite3
 
-dist/bin/clh2-openfci: \
-    dist/tmp/main.o \
-    dist/tmp/coulomb_ho2d/dist/tmp/protocol.o \
-    dist/tmp/coulomb_ho2d/dist/tmp/util.o \
+dist/bin/clh2of-pack: \
+    clh2of-pack.c \
+    utils.inl
+	mkdir -p dist/bin
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ clh2of-pack.c -lsqlite3
+
+dist/bin/clh2of-unpack: \
+    clh2of-unpack.c \
+    utils.inl
+	mkdir -p dist/bin
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ clh2of-unpack.c -lsqlite3
+
+dist/lib/libclh2of.so: \
+    dist/tmp/clh2of.o \
     dist/tmp/openfci/src/manybody/gauss_tools.o \
     dist/tmp/openfci/src/quantumdot/QdotInteraction.o \
     dist/tmp/openfci/src/quantumdot/RadialPotential.o
-	mkdir -p dist/bin
-	$(CXX) -o $@ \
-	    dist/tmp/main.o \
-	    dist/tmp/coulomb_ho2d/dist/tmp/protocol.o \
-	    dist/tmp/coulomb_ho2d/dist/tmp/util.o \
+	mkdir -p dist/lib
+	$(CXX) -shared -Wl,-soname,libclh2of.so -o $@ \
+	    dist/tmp/clh2of.o \
 	    dist/tmp/openfci/src/manybody/gauss_tools.o \
 	    dist/tmp/openfci/src/quantumdot/QdotInteraction.o \
 	    dist/tmp/openfci/src/quantumdot/RadialPotential.o \
-	    $(liblapack) $(libpthread)
+	    $(liblapack) -lpthread
 
-dist/tmp/main.o: \
-    main.cc \
-    dist/tmp/coulomb_ho2d.ok \
+dist/tmp/clh2of-tabulate.o: \
+    clh2of-tabulate.c \
+    dist/include/clh2of.h \
+    utils.inl
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ -c \
+	    clh2of-tabulate.c
+
+dist/tmp/clh2of.o: \
+    clh2of.cc \
+    dist/include/clh2of.h \
     dist/tmp/openfci.ok
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o $@ -c \
-	    -Idist/tmp/coulomb_ho2d/include \
-	    -Idist/tmp/coulomb_ho2d/src \
 	    -Idist/tmp/openfci/src \
-	    main.cc
+	    clh2of.cc
 
-dist/tmp/coulomb_ho2d/dist/tmp/util.o: dist/tmp/coulomb_ho2d.ok
-	cd dist/tmp/coulomb_ho2d && $(MAKE) dist/tmp/util.o
-
-dist/tmp/coulomb_ho2d/dist/tmp/protocol.o: dist/tmp/coulomb_ho2d.ok
-	cd dist/tmp/coulomb_ho2d && $(MAKE) dist/tmp/protocol.o
+dist/include/clh2of.h: clh2of.h
+	mkdir -p dist/include
+	cp clh2of.h $@
 
 dist/tmp/openfci/src/manybody/gauss_tools.o: \
     dist/tmp/lpp.ok \
@@ -79,9 +98,6 @@ dist/tmp/openfci/src/quantumdot/RadialPotential.o: \
     dist/tmp/openfci.ok
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o $@ -c \
 	    dist/tmp/openfci/src/quantumdot/RadialPotential.cc
-
-dist/tmp/coulomb_ho2d.ok:
-	. ./tools && get_coulomb_ho2d dist/tmp
 
 dist/tmp/openfci.ok:
 	. ./tools && get_openfci dist/tmp
