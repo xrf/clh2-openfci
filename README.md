@@ -10,6 +10,9 @@ You need to have some form of [LAPACK](http://netlib.org/lapack) installed.
 Depending on what exotic vendor library you happen to use, you may need to
 adjust the `Makefile` to make it compile.
 
+You'll also need [SQLite3](https://sqlite.org) installed, including the
+development headers of course.
+
 ## Usage
 
 Download and unpack the [latest release][rl] (or clone the repo), then run:

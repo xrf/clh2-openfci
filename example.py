@@ -8,7 +8,7 @@ def benchmark(t):
         n2 = random.randint(0, 5)
         n3 = random.randint(0, 5)
         n4 = random.randint(0, 5)
-        x = t.element(n1, 0, n2, 0, n3, 0, n4, 0)
+        x += t.element(n1, 0, n2, 0, n3, 0, n4, 0)
     print(x)
 
 def example(t):
