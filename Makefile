@@ -84,19 +84,19 @@ dist/include/clh2of.h: clh2of.h
 dist/tmp/openfci/src/manybody/gauss_tools.o: \
     dist/tmp/lpp.ok \
     dist/tmp/openfci.ok
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o $@ -c \
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -Idist/tmp/lpp -o $@ -c \
 	    dist/tmp/openfci/src/manybody/gauss_tools.cc
 
 dist/tmp/openfci/src/quantumdot/QdotInteraction.o: \
     dist/tmp/lpp.ok \
     dist/tmp/openfci.ok
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o $@ -c \
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -Idist/tmp/lpp -o $@ -c \
 	    dist/tmp/openfci/src/quantumdot/QdotInteraction.cc
 
 dist/tmp/openfci/src/quantumdot/RadialPotential.o: \
     dist/tmp/lpp.ok \
     dist/tmp/openfci.ok
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o $@ -c \
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -Idist/tmp/lpp -o $@ -c \
 	    dist/tmp/openfci/src/quantumdot/RadialPotential.cc
 
 dist/tmp/openfci.ok:
