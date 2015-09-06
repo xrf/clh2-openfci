@@ -72,8 +72,9 @@ dist/tmp/clh2of-tabulate.o: \
 dist/tmp/clh2of.o: \
     clh2of.cc \
     dist/include/clh2of.h \
+    dist/tmp/lpp.ok \
     dist/tmp/openfci.ok
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o $@ -c \
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -Idist/tmp/lpp -o $@ -c \
 	    -Idist/tmp/openfci/src \
 	    clh2of.cc
 
