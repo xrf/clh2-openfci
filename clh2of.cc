@@ -71,7 +71,7 @@ extern "C" {
 /* shell_index_max can be negative, in which case it's "auto" */
 struct clh2of *clh2of_init(int shell_index_max)
 {
-    return new struct clh2of(shell_index_max);
+    return new (std::nothrow) struct clh2of(shell_index_max);
 }
 
 void clh2of_setup(struct clh2of *self, int shell_index_max, int exact)

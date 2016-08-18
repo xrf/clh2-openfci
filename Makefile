@@ -12,6 +12,7 @@ CXXFLAGS=$(allflags) -std=c++03 -fPIC
 allflags=-g -O2 -mtune=native -Wall -pedantic
 
 all: \
+    dist/bin/clh2of-simple-tabulate \
     dist/bin/clh2of-tabulate \
     dist/bin/clh2of-pack \
     dist/bin/clh2of-unpack
@@ -28,6 +29,14 @@ env: all
 	    $(SHELL)
 
 .PHONY: all clean env
+
+dist/bin/clh2of-simple-tabulate: \
+    dist/lib/libclh2of.so \
+    dist/tmp/clh2of-simple-tabulate.o
+	mkdir -p dist/bin
+	$(CC) -o $@ \
+	    dist/tmp/clh2of-simple-tabulate.o \
+	    -Ldist/lib -lclh2of -lsqlite3
 
 dist/bin/clh2of-tabulate: \
     dist/lib/libclh2of.so \
@@ -61,6 +70,13 @@ dist/lib/libclh2of.so: \
 	    dist/tmp/openfci/src/quantumdot/QdotInteraction.o \
 	    dist/tmp/openfci/src/quantumdot/RadialPotential.o \
 	    $(liblapack) -lpthread
+
+dist/tmp/clh2of-simple-tabulate.o: \
+    clh2of-simple-tabulate.c \
+    dist/include/clh2of.h \
+    utils.inl
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ -c \
+	    clh2of-simple-tabulate.c
 
 dist/tmp/clh2of-tabulate.o: \
     clh2of-tabulate.c \
