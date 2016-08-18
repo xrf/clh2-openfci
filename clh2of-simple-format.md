@@ -43,3 +43,4 @@ The matrix elements are computed from the integral:
 
 where `φ` are 2-dimensional harmonic oscillator states.  The matrix elements
 are *not* antisymmetrized, because spin has not yet been taken into account.
+Matrix elements that do not conserve `ml` are not included.
