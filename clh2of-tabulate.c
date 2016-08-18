@@ -57,7 +57,7 @@ static int inner_loop(struct clh2of_ix *ix,
         const int done = outer_loop(ix, shell_ix, shell_cap);
         ix->n4 = 0;
         ix->ml4 = ix->ml1 + ix->ml2 - ix->ml3;
-        shell_ix[3] = 2 * abs(ix->ml4);
+        shell_ix[3] = abs(ix->ml4);
         if (done)
             return 1;
     }
@@ -79,7 +79,7 @@ static sqlite3_int64 canonicalize(struct clh2of_ix *ix)
     const unsigned long
         p12 = ordered_fuse(p1, p2),
         p34 = ordered_fuse(p3, p4);
-    if (p1 > p2 || p12 > p34)
+    if ((p1 > p2 && (p1 == p2 || p3 > p4)) || p12 > p34)
         return -1;
     return
         (sqlite3_int64)p1 << 48 ^
