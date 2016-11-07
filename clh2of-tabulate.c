@@ -12,7 +12,7 @@ static unsigned shell_index(unsigned char n, signed char ml) {
 
 static unsigned nml_to_p(unsigned char n, signed char ml)
 {
-    const int k = shell_index(n, ml);
+    const int k = (int)shell_index(n, ml);
     return (unsigned)(k * (k + 2) + ml) / 2;
 }
 
@@ -57,7 +57,7 @@ static int inner_loop(struct clh2of_ix *ix,
         const int done = outer_loop(ix, shell_ix, shell_cap);
         ix->n4 = 0;
         ix->ml4 = ix->ml1 + ix->ml2 - ix->ml3;
-        shell_ix[3] = abs(ix->ml4);
+        shell_ix[3] = (unsigned)abs(ix->ml4);
         if (done)
             return 1;
     }
@@ -96,7 +96,8 @@ int main(int argc, char **argv)
         "Output is stored in SQLite format.\n";
 
     struct clh2of *ctx;
-    struct clh2of_ix ix = {0}, ixc;
+    static struct clh2of_ix ix;    /* declared static to initialize to zero */
+    struct clh2of_ix ixc;
     unsigned shell_cap, shell_ix[4] = {0};
     sqlite3 *db;
     sqlite3_stmt *stmt;
@@ -105,13 +106,13 @@ int main(int argc, char **argv)
 
     /* print usage if needed */
     if (argc != 3) {
-        fprintf(stderr, usage);
+        fprintf(stderr, "%s", usage);
         fflush(stderr);
         exit(EXIT_FAILURE);
     }
 
     /* parse arguments */
-    shell_cap = strtol(argv[1], &str, 10);
+    shell_cap = (unsigned)strtol(argv[1], &str, 10);
     if (argv[1] == str) {
         fprintf(stderr, "clh2of-tabulate: MAX_NUM_SHELLS is invalid\n");
         fflush(stderr);
@@ -127,7 +128,7 @@ int main(int argc, char **argv)
     fflush(stdout);
 
     /* initialization */
-    ctx = clh2of_init(shell_cap - 1);
+    ctx = clh2of_init((int)(shell_cap - 1));
     if (sqlite3_config(SQLITE_CONFIG_LOG, error_sqlite, NULL))
         panic();
 

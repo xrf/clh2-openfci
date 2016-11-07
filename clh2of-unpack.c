@@ -30,7 +30,7 @@ static size_t br_read(struct buffered_reader *self, void *data, size_t size)
             self->avail -= size;
             return 0;
         }
-        int count;
+        size_t count;
         memcpy(dest, src, self->avail);
         size -= self->avail;
         dest += self->avail;
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
 
     /* print usage if needed */
     if (argc != 3) {
-        fprintf(stderr, usage);
+        fprintf(stderr, "%s", usage);
         fflush(stderr);
         exit(EXIT_FAILURE);
     }

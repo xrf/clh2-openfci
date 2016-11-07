@@ -30,7 +30,7 @@ static int bw_write(struct buffered_writer *self,
             self->position += size;
             return 0;
         }
-        int r;
+        size_t r;
         memcpy(dest, src, remaining);
         size -= remaining;
         src += remaining;
@@ -43,7 +43,7 @@ static int bw_write(struct buffered_writer *self,
 
 static int bw_flush(struct buffered_writer *self)
 {
-    const int r = fwrite(self->buffer, self->position, 1, self->stream);
+    const size_t r = fwrite(self->buffer, self->position, 1, self->stream);
     if (!r)
         return 1;
     self->position = 0;
@@ -64,7 +64,7 @@ int main(int argc, char **argv)
 
     /* print usage if needed */
     if (argc != 3) {
-        fprintf(stderr, usage);
+        fprintf(stderr, "%s", usage);
         fflush(stderr);
         exit(EXIT_FAILURE);
     }

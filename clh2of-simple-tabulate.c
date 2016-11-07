@@ -16,7 +16,7 @@ static unsigned shell_index(unsigned char n, signed char ml)
 
 static unsigned nml_to_p(unsigned char n, signed char ml)
 {
-    const int k = shell_index(n, ml);
+    const int k = (int)shell_index(n, ml);
     return (unsigned)(k * (k + 2) + ml) / 2;
 }
 
@@ -102,10 +102,10 @@ int main(int argc, char **argv)
     const char *out_fn;
     unsigned shell_max, shell_ix[4] = {0};
     struct clh2of *ctx;
-    struct {
+    static struct {
         struct clh2of_ix ix;
         double value;
-    } entry = {{0}};
+    } entry;                       /* declared static to initialize to zero */
 
     /* print usage if needed */
     if (argc != 3) {
@@ -115,7 +115,7 @@ int main(int argc, char **argv)
     }
 
     /* parse arguments */
-    shell_max = strtol(argv[1], &str, 10);
+    shell_max = (unsigned)strtol(argv[1], &str, 10);
     if (argv[1] == str) {
         fprintf(stderr, PROG ": MAX_NUM_SHELLS is invalid\n");
         fflush(stderr);
@@ -131,7 +131,7 @@ int main(int argc, char **argv)
     fflush(stderr);
 
     /* initialize and open file */
-    ctx = clh2of_init(shell_max);
+    ctx = clh2of_init((int)shell_max);
     if (!ctx ||
         !(f = fopen(out_fn, "wb"))) {
         abort();

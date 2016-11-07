@@ -106,15 +106,45 @@ dist/tmp/openfci/src/manybody/gauss_tools.o: \
 
 dist/tmp/openfci/src/quantumdot/QdotInteraction.o: \
     dist/tmp/lpp.ok \
-    dist/tmp/openfci.ok
+    dist/tmp/openfci.ok \
+    dist/tmp/openfci/src/manybody/gauss_tools.hpp \
+    dist/tmp/openfci/src/manybody/linalg.hpp \
+    dist/tmp/openfci/src/manybody/simple_linalg.hpp \
+    dist/tmp/openfci/src/manybody/simple_matrix.hpp \
+    dist/tmp/openfci/src/manybody/simple_vector.hpp \
+    dist/tmp/openfci/src/manybody/sparse.hpp \
+    dist/tmp/openfci/src/manybody/tools.hpp \
+    dist/tmp/openfci/src/quantumdot/QdotInteraction.cc \
+    dist/tmp/openfci/src/quantumdot/QdotInteraction.hpp \
+    dist/tmp/openfci/src/quantumdot/RadialPotential.hpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -Idist/tmp/lpp -o $@ -c \
 	    dist/tmp/openfci/src/quantumdot/QdotInteraction.cc
 
 dist/tmp/openfci/src/quantumdot/RadialPotential.o: \
     dist/tmp/lpp.ok \
-    dist/tmp/openfci.ok
+    dist/tmp/openfci.ok \
+    dist/tmp/openfci/src/manybody/gauss_tools.hpp \
+    dist/tmp/openfci/src/manybody/linalg.hpp \
+    dist/tmp/openfci/src/manybody/simple_linalg.hpp \
+    dist/tmp/openfci/src/manybody/simple_matrix.hpp \
+    dist/tmp/openfci/src/manybody/simple_vector.hpp \
+    dist/tmp/openfci/src/manybody/tools.hpp \
+    dist/tmp/openfci/src/quantumdot/RadialPotential.cc \
+    dist/tmp/openfci/src/quantumdot/RadialPotential.hpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -Idist/tmp/lpp -o $@ -c \
 	    dist/tmp/openfci/src/quantumdot/RadialPotential.cc
+
+dist/tmp/openfci/src/manybody/gauss_tools.hpp \
+dist/tmp/openfci/src/manybody/linalg.hpp \
+dist/tmp/openfci/src/manybody/simple_linalg.hpp \
+dist/tmp/openfci/src/manybody/simple_matrix.hpp \
+dist/tmp/openfci/src/manybody/simple_vector.hpp \
+dist/tmp/openfci/src/manybody/sparse.hpp \
+dist/tmp/openfci/src/manybody/tools.hpp \
+dist/tmp/openfci/src/quantumdot/QdotInteraction.cc \
+dist/tmp/openfci/src/quantumdot/QdotInteraction.hpp \
+dist/tmp/openfci/src/quantumdot/RadialPotential.cc \
+dist/tmp/openfci/src/quantumdot/RadialPotential.hpp: dist/tmp/openfci.ok
 
 dist/tmp/openfci.ok:
 	. ./tools && get_openfci dist/tmp
