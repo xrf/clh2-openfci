@@ -31,7 +31,7 @@ env: all
 
 install: all
 	install -Dm644 clh2of.h $(DESTDIR)$(PREFIX)/include/clh2of.h
-	install -Dm755 clh2of-simple-dump.py $(DESTDIR)$(PREFIX)/bin/clhof-simple-dump.py
+	install -Dm755 clh2of-simple-dump $(DESTDIR)$(PREFIX)/bin/clh2of-simple-dump
 	install -Dm755 dist/bin/clh2of-pack $(DESTDIR)$(PREFIX)/bin/clh2of-pack
 	install -Dm755 dist/bin/clh2of-simple-mod $(DESTDIR)$(PREFIX)/bin/clh2of-simple-mod
 	install -Dm755 dist/bin/clh2of-simple-tabulate $(DESTDIR)$(PREFIX)/bin/clh2of-simple-tabulate
