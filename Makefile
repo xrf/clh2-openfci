@@ -12,6 +12,7 @@ CXXFLAGS=$(allflags) -std=c++03 -fPIC
 allflags=-g -O2 -mtune=native -Wall -pedantic
 
 all: \
+    dist/bin/clh2of-simple-add \
     dist/bin/clh2of-simple-tabulate \
     dist/bin/clh2of-tabulate \
     dist/bin/clh2of-pack \
@@ -29,6 +30,10 @@ env: all
 	    $(SHELL)
 
 .PHONY: all clean env
+
+dist/bin/clh2of-simple-add: clh2of-simple-add.o
+	mkdir -p dist/bin
+	$(CC) -o $@ clh2of-simple-add.o
 
 dist/bin/clh2of-simple-tabulate: \
     dist/lib/libclh2of.so \
@@ -155,3 +160,8 @@ dist/tmp/openfci.ok:
 
 dist/tmp/lpp.ok:
 	. ./tools && get_lpp dist/tmp
+
+.SUFFIXES: .c .o
+
+.c.o:
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ -c $<
