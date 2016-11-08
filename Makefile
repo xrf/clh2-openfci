@@ -12,10 +12,10 @@ CXXFLAGS=$(allflags) -std=c++03 -fPIC
 allflags=-g -O2 -mtune=native -Wall -pedantic
 
 all: \
+    dist/bin/clh2of-pack \
     dist/bin/clh2of-simple-add \
     dist/bin/clh2of-simple-tabulate \
     dist/bin/clh2of-tabulate \
-    dist/bin/clh2of-pack \
     dist/bin/clh2of-unpack
 
 clean:
@@ -29,7 +29,20 @@ env: all
 	    CPLUS_INCLUDE_PATH=dist/include$${CPLUS_INCLUDE_PATH+:}$$CPLUS_INCLUDE_PATH \
 	    $(SHELL)
 
-.PHONY: all clean env
+install: all
+	install -Dm644 clh2of.h $(DESTDIR)$(PREFIX)/include/clh2of.h
+	install -Dm755 clh2of-simple-dump.py $(DESTDIR)$(PREFIX)/bin/clhof-simple-dump.py
+	install -Dm755 dist/bin/clh2of-pack $(DESTDIR)$(PREFIX)/bin/clh2of-pack
+	install -Dm755 dist/bin/clh2of-simple-add $(DESTDIR)$(PREFIX)/bin/clh2of-simple-add
+	install -Dm755 dist/bin/clh2of-simple-tabulate $(DESTDIR)$(PREFIX)/bin/clh2of-simple-tabulate
+	install -Dm755 dist/bin/clh2of-tabulate $(DESTDIR)$(PREFIX)/bin/clh2of-tabulate
+	install -Dm755 dist/bin/clh2of-unpack $(DESTDIR)$(PREFIX)/bin/clh2of-unpack
+	install -Dm755 dist/lib/libclh2of.so $(DESTDIR)$(PREFIX)/lib/libclh2of.so
+
+uninstall: all
+	rm -f $(DESTDIR)$(PREFIX)/include/clh2of.h $(DESTDIR)$(PREFIX)/bin/clhof-simple-dump.py $(DESTDIR)$(PREFIX)/bin/clh2of-pack $(DESTDIR)$(PREFIX)/bin/clh2of-simple-add $(DESTDIR)$(PREFIX)/bin/clh2of-simple-tabulate $(DESTDIR)$(PREFIX)/bin/clh2of-tabulate $(DESTDIR)$(PREFIX)/bin/clh2of-unpack $(DESTDIR)$(PREFIX)/lib/libclh2of.so
+
+.PHONY: all clean env install uninstall
 
 dist/bin/clh2of-simple-add: clh2of-simple-add.o
 	mkdir -p dist/bin
