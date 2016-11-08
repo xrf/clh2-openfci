@@ -1,0 +1,32 @@
+#!/usr/bin/env python3
+from subprocess import run
+
+num_shells = 10
+sigma_a = 0.5
+sigma_b = 4.0
+
+a = 0.5 / sigma_a**2
+b = 0.5 / sigma_b**2
+
+# make sure the envelope peak has height 1.0
+c = a / b
+height = c / (1.0 + c) ** (1 - 1.0 / c)
+lambd1 = 1.0 / height
+lambd2 = -1.0 / height
+
+beta1 = b
+beta2 = a + b
+
+run("""
+make -j8 DESTDIR=$HOME/.local install &&
+clh2of-simple-tabulate {num_shells} dump1.dat {lambd1} {beta1} &&
+clh2of-simple-tabulate {num_shells} dump2.dat {lambd2} {beta2} &&
+#./clh2of-simple-dump.py dump1.dat >dump1.txt &&
+#./clh2of-simple-dump.py dump2.dat >dump2.txt &&
+clh2of-simple-mod add dump1.dat dump2.dat dump3.dat &&
+clh2of-simple-mod sort dump3.dat &&
+#./clh2of-simple-dump.py dump3.dat >dump3.txt &&
+#md5sum dump_orig.txt dump3.txt &&
+#git diff --no-index --word-diff dump_orig.txt dump3.txt &&
+:
+""".format(**locals()), check=True, shell=True)
