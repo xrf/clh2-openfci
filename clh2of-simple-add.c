@@ -26,7 +26,8 @@ int main(int argc, char **argv)
     FILE *f2 = fopen(argv[2], "rb");
     FILE *f3 = fopen(argv[3], "wb");
 
-    while (1) {
+    unsigned long i;
+    for (i = 0; ; ++i) {
         struct entry e1, e2;
         size_t n1 = fread(&e1, sizeof(struct entry), 1, f1);
         size_t n2 = fread(&e2, sizeof(struct entry), 1, f2);
@@ -35,7 +36,19 @@ int main(int argc, char **argv)
             abort();
         }
         if (memcmp(&e1.index, &e2.index, sizeof(struct clh2of_ix)) != 0) {
-            fprintf(stderr, "indices do not match\n");
+            fprintf(stderr,
+                    "entry #%lu: indices do not match: "
+                    "%u %i %u %i %u %i %u %i != "
+                    "%u %i %u %i %u %i %u %i\n",
+                    i,
+                    e1.index.n1, e1.index.ml1,
+                    e1.index.n2, e1.index.ml2,
+                    e1.index.n3, e1.index.ml3,
+                    e1.index.n4, e1.index.ml4,
+                    e2.index.n1, e2.index.ml1,
+                    e2.index.n2, e2.index.ml2,
+                    e2.index.n3, e2.index.ml3,
+                    e2.index.n4, e2.index.ml4);
             abort();
         }
         if (n1 != 1) {
