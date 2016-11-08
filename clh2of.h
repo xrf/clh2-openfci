@@ -18,6 +18,10 @@ struct clh2of_ix {
 /** `shell_index_max` can be omitted by providing a negative value */
 struct clh2of *clh2of_init(int shell_index_max);
 
+void clh2of_set_lambda(struct clh2of *self, double value);
+
+void clh2of_set_beta(struct clh2of *self, double value);
+
 void clh2of_setup(struct clh2of *self, int shell_index_max, int exact);
 
 double clh2of_element(struct clh2of *self, const struct clh2of_ix *ix);

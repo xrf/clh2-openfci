@@ -90,8 +90,8 @@ static int is_canonical(const struct clh2of_ix *ix)
 #define PROG "clh2of-simple-tabulate"
 
 static const char *usage =
-    "Usage: " PROG " NUM_SHELLS OUTPUT_FILENAME\n\n"
-    "Tabulates matrix elements for NUM_SHELLS using OpenFCI.\n\n"
+    "Usage: " PROG " <num_shells> <out_file> [<lambda> [<beta>]]\n\n"
+    "Tabulates matrix elements for <num_shells> using OpenFCI.\n\n"
     "Output is stored in the following binary format:\n"
     "((<n:uint8> <ml:int8>){4} <value:float64>)*\n";
 
@@ -100,6 +100,7 @@ int main(int argc, char **argv)
     FILE *f;
     char *str;
     const char *out_fn;
+    double lambda = 1.0, beta = 0.0;
     unsigned shell_max, shell_ix[4] = {0};
     struct clh2of *ctx;
     static struct {
@@ -108,7 +109,7 @@ int main(int argc, char **argv)
     } entry;                       /* declared static to initialize to zero */
 
     /* print usage if needed */
-    if (argc != 3) {
+    if (argc < 3 || argc > 5) {
         fprintf(stderr, "%s", usage);
         fflush(stderr);
         exit(EXIT_FAILURE);
@@ -117,25 +118,48 @@ int main(int argc, char **argv)
     /* parse arguments */
     shell_max = (unsigned)strtol(argv[1], &str, 10);
     if (argv[1] == str) {
-        fprintf(stderr, PROG ": MAX_NUM_SHELLS is invalid\n");
+        fprintf(stderr, PROG ": <num_shells> is invalid\n");
         fflush(stderr);
         exit(EXIT_FAILURE);
     }
     out_fn = argv[2];
+    if (argc >= 4) {
+        lambda = strtod(argv[3], &str);
+        if (argv[3] == str) {
+            fprintf(stderr, PROG ": <lambda> is invalid\n");
+            fflush(stderr);
+            exit(EXIT_FAILURE);
+        }
+    }
+    if (argc >= 5) {
+        beta = strtod(argv[4], &str);
+        if (argv[4] == str) {
+            fprintf(stderr, PROG ": <beta> is invalid\n");
+            fflush(stderr);
+            exit(EXIT_FAILURE);
+        }
+    }
     fprintf(stderr,
             "Tabulating matrix elements from "
             "shell #0 to shell #%i (inclusive).\n"
+            "lambda = %.17g\n"
+            "beta = %.17g\n"
             "Saving to %s ...\n",
             shell_max,
+            lambda,
+            beta,
             out_fn);
     fflush(stderr);
 
     /* initialize and open file */
-    ctx = clh2of_init((int)shell_max);
+    ctx = clh2of_init(-1);
     if (!ctx ||
         !(f = fopen(out_fn, "wb"))) {
         abort();
     }
+    clh2of_set_lambda(ctx, lambda);
+    clh2of_set_beta(ctx, beta);
+    clh2of_setup(ctx, (int)shell_max, 1);
 
     /* generate the matrix elements */
     do {

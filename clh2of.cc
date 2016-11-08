@@ -19,8 +19,10 @@ struct clh2of {
     // maximum shell index allowed by `q` (be sure to keep this in sync)
     int shell_index_cap;
 
+    double lambda, beta;
+
     clh2of(int shell_index_max = initial_shell_index_cap)
-        : shell_index_cap(initial_shell_index_cap) {
+        : shell_index_cap(initial_shell_index_cap), lambda(1.0), beta() {
         if (shell_index_max >= 0)
             setup(shell_index_max, true);
     }
@@ -45,6 +47,10 @@ struct clh2of {
         // increase the shell index; note that we can't reuse the internal
         // state (things will break), so we must construct a new one
         q = quantumdot::QdotInteraction();
+        quantumdot::RadialPotential p;
+        p.setLambda(this->lambda);
+        p.setBeta(this->beta);
+        q.setRadialPotential(p);
         q.setR(shell_index_cap);
         q.buildInteractionComBlocks();
     }
@@ -72,6 +78,16 @@ extern "C" {
 struct clh2of *clh2of_init(int shell_index_max)
 {
     return new (std::nothrow) struct clh2of(shell_index_max);
+}
+
+void clh2of_set_lambda(struct clh2of *self, double value)
+{
+    self->lambda = value;
+}
+
+void clh2of_set_beta(struct clh2of *self, double value)
+{
+    self->beta = value;
 }
 
 void clh2of_setup(struct clh2of *self, int shell_index_max, int exact)
