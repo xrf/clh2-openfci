@@ -77,9 +77,9 @@ int main_add(int argc, char **argv)
 
 int comp(const void *leftptr, const void *rightptr)
 {
-    uint64_t left = *(uint64_t *)leftptr;
-    uint64_t right = *(uint64_t *)rightptr;
-    return right < left - left < right;
+    uint64_t left = *(const uint64_t *)leftptr;
+    uint64_t right = *(const uint64_t *)rightptr;
+    return (right < left) - (left < right);
 }
 
 int main_sort(int argc, char **argv)
