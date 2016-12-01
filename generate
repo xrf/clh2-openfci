@@ -1,32 +1,94 @@
 #!/usr/bin/env python3
+import argparse, os
 from subprocess import run
+import matplotlib.pyplot as plt
+import numpy as np
 
-num_shells = 10
-sigma_a = 0.5
-sigma_b = 4.0
+def calc(num_shells, sigma_a, sigma_b):
+    if not (sigma_a >= 0 and np.isfinite(sigma_a)):
+        raise ValueError("sigma_a must be nonnegative and finite")
+    if not (sigma_b > 0):
+        raise ValueError("sigma_b must be positive (need not be finite)")
 
-a = 0.5 / sigma_a**2
-b = 0.5 / sigma_b**2
+    if sigma_a == 0.0:
+        a = np.inf
+    else:
+        a = 0.5 / sigma_a**2
+    b = 0.5 / sigma_b**2
 
-# make sure the envelope peak has height 1.0
-c = a / b
-height = c / (1.0 + c) ** (1 - 1.0 / c)
-lambd1 = 1.0 / height
-lambd2 = -1.0 / height
+    if sigma_a == 0.0 or sigma_b == np.inf:
+        height = 1.0
+    else:
+        # make sure the envelope peak has height 1.0
+        c = a / b
+        height = c / (1.0 + c) ** (1 - 1.0 / c)
 
-beta1 = b
-beta2 = a + b
+    lambd1 = 1.0 / height
+    if sigma_a == 0.0:
+        lambd2 = 0.0
+    else:
+        lambd2 = -1.0 / height
 
-run("""
-make -j8 DESTDIR=$HOME/.local install &&
-clh2of-simple-tabulate {num_shells} dump1.dat {lambd1} {beta1} &&
-clh2of-simple-tabulate {num_shells} dump2.dat {lambd2} {beta2} &&
-#./clh2of-simple-dump.py dump1.dat >dump1.txt &&
-#./clh2of-simple-dump.py dump2.dat >dump2.txt &&
-clh2of-simple-mod add dump1.dat dump2.dat dump3.dat &&
-clh2of-simple-mod sort dump3.dat &&
-#./clh2of-simple-dump.py dump3.dat >dump3.txt &&
-#md5sum dump_orig.txt dump3.txt &&
-#git diff --no-index --word-diff dump_orig.txt dump3.txt &&
-:
-""".format(**locals()), check=True, shell=True)
+    beta1 = b
+    if sigma_a == 0.0:
+        beta2 = 0.0 # doesn't matter since lambd2 is zero
+    else:
+        beta2 = a + b
+
+    print("""
+λ1 = {lambd1}
+β1 = {beta1}
+λ2 = {lambd2}
+β2 = {beta2}
+
+make sure everything is correct, then close the plot window to continue
+"""[1:-1].format(**locals()))
+
+    r = np.linspace(1e-10, 10.0, 200)
+    V = 1.0 / r
+    Vm = (lambd1 * np.exp(-beta1 * r ** 2) +
+          lambd2 * np.exp(-beta2 * r ** 2)) / r
+    Vm2 = 1.0 / height * (1 - np.exp(-a * r ** 2)) * np.exp(-b * r ** 2) / r
+    plt.plot(r, V, "--", label="Coulomb")
+    plt.plot(r, Vm, label="modified")
+    assert np.linalg.norm(Vm - Vm2) <= 1e-10
+    plt.legend()
+    plt.ylim(0.0, 2.0 * height)
+    plt.show()
+
+    sigma_a_suffix = "" if sigma_a == 0.0 else "_sigmaA={}".format(sigma_a)
+    sigma_b_suffix = "" if sigma_b == np.inf else "_sigmaB={}".format(sigma_b)
+    out_fn = ("clh2_shells={num_shells}{sigma_a_suffix}{sigma_b_suffix}.dat"
+              .format(**locals()))
+
+    run("""
+    set -eu
+    make -j8 DESTDIR=$HOME/.local install
+    clh2of-simple-tabulate {num_shells} {out_fn}.1.tmp {lambd1} {beta1}
+    clh2of-simple-tabulate {num_shells} {out_fn}.2.tmp {lambd2} {beta2}
+    clh2of-simple-mod add {out_fn}.1.tmp {out_fn}.2.tmp {out_fn}
+    rm {out_fn}.1.tmp {out_fn}.2.tmp
+    clh2of-simple-mod sort {out_fn}
+    md5sum {out_fn} | tee {out_fn}.md5sum
+    """.format(**locals()), check=True, shell=True)
+
+def main():
+    p = argparse.ArgumentParser(
+        description="""
+    Compute interaction matrix elements for a generalized Coulomb potential in a
+    2D harmonic oscillator basis:
+
+        V(r) = C * (1 - exp(-r^2 / (2 * sigma_a^2))) *
+               exp(-r^2 / (2 * sigma_b^2)) / r,
+
+    where C is defined so that the peak height of r * V(r) is 1.
+
+    Setting sigma_a = 0 and sigma_b = inf yields the normal Coulomb interaction.
+    """)
+    p.add_argument("num_shells")
+    p.add_argument("sigma_a", type=float, help="range begin [0, inf)")
+    p.add_argument("sigma_b", type=float, help="range end (0, inf]")
+    calc(**vars(p.parse_args()))
+
+if __name__ == "__main__":
+    main()
