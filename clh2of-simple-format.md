@@ -1,70 +1,71 @@
-# Table format
+# Simple formats (`clh2of-simple`) v2
 
-## Specification
+*Changes since v1: Fixed incomplete canonicalization conditions.*
 
-There's 3 important things to know:
+In this document, formal grammar is specified using [W3C EBNF notation](https://www.w3.org/TR/REC-xml/#sec-notation).
 
-  - [Data layout](#data-layout)
-  - [Mathematical value](#mathematical-value)
-  - [Deduplication](#deduplication)
+## Mathematical definition
 
-### Data layout
+The value of each entry is defined to be the given by the following integral:
 
-The table is stored in following format:
+    ⟨n1 ml1, n2 ml2 | V | n3 ml3, n4 ml4⟩ =
+      ∬ φ[n1 ml1](r) φ[n2 ml2](r') (1/|r - r'|) φ[n3 ml3](r) φ[n4 ml4](r') dr dr'
 
-    (<n1:uint8> <ml1:int8>
-     <n2:uint8> <ml2:int8>
-     <n3:uint8> <ml3:int8>
-     <n4:uint8> <ml4:int8>
-     <value:float64>)*
+where `φ[n ml]` is the 2-dimensional harmonic oscillator wave function with (zero-based) principal quantum number `n` and angular momentum projection `ml`.  The matrix elements are *not* antisymmetrized, because spin has not yet been taken into account.
 
-which can be denoted more compactly as:
+Matrix elements that do not conserve `ml` are not included in the table.
 
-    ((<n:uint8> <ml:int8>){4} <value:float64>)*
+## Binary format (`clh2of-simple-binary`)
 
-Explanation:
+A table consists of a sequence of [canonical](#canonicalization) matrix element entries.  In the binary format, the table is stored as a concatenation of all its entries with no separators.  Each entry is 16 bytes, thus a table with `N` entries would occupy exactly `16 × N` bytes.
 
-  - The file contains a repeating stream of 16-byte segments.  Each segment
-    stores the quantum numbers in the first 8 bytes and the value of the
-    matrix element in the remaining 8 bytes.
-  - The 1st byte of a segment contains the `n1` quantum number, stored as an
-    8-bit unsigned integer.
-  - The 2nd byte of a segment contains the `ml1` quantum number, stored as an
-    8-bit signed integer.
-  - The 3rd byte of a segment contains the `n2` quantum number, stored as an
-    8-bit unsigned integer.
-  - The 4th byte of a segment contains the `ml2` quantum number, stored as an
-    8-bit signed integer.
-  - The 5th byte of a segment contains the `n3` quantum number, stored as an
-    8-bit unsigned integer.
-  - The 6th byte of a segment contains the `ml3` quantum number, stored as an
-    8-bit signed integer.
-  - The 7th byte of a segment contains the `n4` quantum number, stored as an
-    8-bit unsigned integer.
-  - The 8th byte of a segment contains the `ml4` quantum number, stored as an
-    8-bit signed integer.
-  - The remaining 8 bytes store the value of the matrix element as a 64-bit
-    little-endian IEEE 754 floating-point number.
+    table ::= entry*
 
-## Mathematical value
+The order of entries within a table is not specified.
 
-The matrix elements are computed from the integral:
+An entry consists of 9 fields.  The first 8 bytes contain the 8 quantum numbers, and the remaining 8 bytes contain the value of the matrix element as an IEEE 754 double-precision floating-point number.
 
-    ⟨(n1, ml1), (n2, ml2) | V | (n3, ml3), (n4, ml4)⟩ =
-      ∫[d r] ∫[d r'] φ[n1, ml1](r) φ[n2, ml2](r') φ[n3, ml3](r) φ[n4, ml4](r')
+    entry ::= n1 ml1 n2 ml2 n3 ml3 n4 ml4 value
+    n1    ::= uint8
+    ml1   ::= int8
+    n2    ::= uint8
+    ml2   ::= int8
+    n3    ::= uint8
+    ml3   ::= int8
+    n4    ::= uint8
+    ml4   ::= int8
+    value ::= float64
 
-where `φ` are 2-dimensional harmonic oscillator states.  The matrix elements
-are *not* antisymmetrized, because spin has not yet been taken into account.
-Matrix elements that do not conserve `ml` are not included.
+It is recommended to use the `.dat` file extension for binary formats.
 
-## Deduplication
+### Endianness
 
-All matrix elements in the file are *canonical*, as defined below.  Non-canonical matrix elements are intentionally absent from the file as they can be obtained from an equivalent canonical matrix element by making use of particle nondistinguishability and operator hermitivity.  This condition reduces the size of the matrix element file by roughly 1/4.
+Little-endian order is recommended for general use.  Big-endian order may be used for transient storage of matrix elements on big-endian platforms, but are strongly discouraged for transmission or dissemination of matrix elements.
+
+## Textual format (`clh2of-simple-text`)
+
+On an abstract level, the textual format is structured in exactly the same way as the binary format.  The main difference is in the representation:
+
+  - All numbers are presented in a human-readable form.
+
+  - Each entry is stored as a single line, with the fields separated by horizontal whitespace (spaces and/or tabs).
+
+  - There may exist empty lines that do not represent entries.  These lines consist of only horizontal whitespace.
+
+        empty_line ::= hspace* newline
+
+  - There may exist comment lines that do not represent entries.  These lines begin with the `#` character.
+
+        comment_line ::= hspace* "#" non_newline* newline
+
+It is recommended to use the `.txt` file extension for textual formats.
+
+## Canonicalization
 
 A matrix element for `(n1, ml1, n2, ml2, n3, ml3, n4, ml4)` is said to be **canonical** if and only if
 
 ~~~hs
-(p1, p2) <= sort(p3, p4) && p1 <= p2
+(p1, p2) <= sort(p3, p4) && (p1, p3) <= (p2, p4)
 
 where
 
@@ -82,16 +83,24 @@ where
       where k = 2 * n + abs(ml)
 ~~~
 
+Note that comparisons such as `(a, b) <= (c, d)` are performed using lexicographical ordering.
+
+Non-canonical matrix elements can be recovered from canonical matrix elements through particle nondistinguishability,
+
+    ⟨p1 p2| V |p3 p4⟩ = ⟨p2 p1| V |p4 p3⟩
+
+and operator hermitivity,
+
+    ⟨p1 p2| V |p3 p4⟩ = conj(⟨p3 p4| V |p1 p2⟩)
+
 ## Example
 
-### C implementation
+### C implementation of simple binary format
 
-The format is "raw binary", meaning you read it as if you are reading directly from memory.(*)  Conceptually, it is structured as if it is a contiguous array of `struct entry` where
+For simplicity, assume the platform is little-endian.  Conceptually, the binary format is structured like a contiguous array of the following structure:
 
 ~~~c
 struct entry {
-
-    // quantum numbers (alternating 8-bit unsigned and signed integers)
     uint8_t n1;
     int8_t ml1;
     uint8_t n2;
@@ -100,22 +109,17 @@ struct entry {
     int8_t ml3;
     uint8_t n4;
     int8_t ml4;
-
-    // value of the matrix element (IEEE 754 double-precision floating-point)
     double value;
-
 };
 ~~~
 
-The number of `struct entry` objects in the array is implied by the size of the file (= file_size / (16 bytes)).  There is no padding.  Iterating over the file should be straightforward in C or C++:
+The number of `struct entry` objects in the array can be inferred from the size of the file (`= file_size_in_bytes / 16`).  There is no padding.  Iterating over the file is straightforward in C or C++:
 
 ~~~c
 struct entry ent;
 while (fread(&ent, sizeof(ent), 1, file) == 1) {
-    printf("matrix element (%i %i %i %i %i %i %i %i) = %f\n",
+    printf("<%i %i %i %i | V | %i %i %i %i> = %f\n",
            ent.n1, ent.ml1, ent.n2, ent.ml2, ent.n3, ent.ml3, ent.n4, ent.ml4,
            ent.value);
 }
 ~~~
-
-(*) I'm making certain assumptions about endianness and integer representation here. Assume little-endian and 2's complement, which is the de facto for x86-64 platforms.  Certainly, the file format as describe wouldn't work if you try to read from a more exotic arch like PowerPC big-endian.

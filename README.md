@@ -1,115 +1,51 @@
 # clh2-openfci
 
-**Quick links:** [releases][rl].
+**Quick links:** [releases](https://github.com/xrf/clh2-openfci/releases).
 
-A set of tools to tabulate the matrix elements calculated via [OpenFCI][of].
+Utilities to tabulate the matrix elements using [OpenFCI](https://github.com/xrf/simen-openfci).
 
 ## Requirements
 
-You need to have some form of [LAPACK](http://netlib.org/lapack) installed.
-Depending on what exotic vendor library you happen to use, you may need to
-adjust the `Makefile` to make it compile.
-
-You'll also need [SQLite3](https://sqlite.org) installed, including the
-development headers of course.
+  - You'll need [LAPACK](http://netlib.org/lapack) in some form.  Depending on what exotic vendor library you happen to use, adjustments to the `Makefile` may be needed to compile.
+  - You'll also need the [SQLite3](https://sqlite.org) library and its header files.
 
 ## Usage
 
-Download and unpack the [latest release][rl] (or clone the repo), then run:
+Download and unpack the [latest release](https://github.com/xrf/clh2-openfci/releases) (or clone the repo), then run `make` to build all the tools.
+
+To run the tools, start a custom shell session via:
 
 ```sh
 make env SHELL="$SHELL"
 ```
 
-Within this session, you have access to the following tools:
+Within this shell session, you have access to various tools:
 
-  - `clh2of-tabulate`: Calculate and store matrix elements in SQLite format.
-  - `clh2of-pack`: Convert matrix elements in SQLite format to binary format.
-  - `clh2of-unpack`: Reverse of `clh2of-pack`.
-  - `clh2of.py`: A basic Python wrapper around the matrix element calculator;
-    useful for testing and interactive evaluation.
+  - `clh2of-simple-tabulate`: Tabulate matrix elements in simple binary format.
+  - `clh2of-simple-dump`: Convert simple binary format to simple text format.
+  - `clh2of-simple-mod`: Modify matrix elements in simple binary format.
+  - `clh2of-tabulate`: Tabulate matrix elements in keyed SQLite3 format.
+  - `clh2of-pack`: Convert keyed SQLite3 format to keyed binary format.
+  - `clh2of-unpack`: Convert keyed binary format to keyed SQLite3 format.
 
-Matrix elements can be read in using standard tools.  The SQLite format is
-easier to use in a high-level language like Python, but it is less compact.
-The native binary format is a bit more difficult to use as you will need to
-search the file for each element using I/O operations (or use memory mapping
-if you have enough memory).
+**Known limitation:**  The endianness of binary formats produced by these tools depends on your current platform.
 
-An example of how to access these matrix elements can be found in the
-`example.py`, which makes use of `clh2of_table.py`.
+For a detailed explanation of the various formats, refer to the following documents:
 
-## Specification of the matrix element formats
+  - [Simple formats](clh2of-simple-format.md)
+  - [Keyed formats](clh2of-keyed-format.md)
 
-### 1. SQLite format
+Generally, you should stick to the simple format for simplicity sake.
 
-The schema is given by:
+### Auxiliary scripts
 
-```sql
-CREATE TABLE data (key INTEGER PRIMARY KEY, value REAL);
-```
+  - `./clh2of.py`: A basic Python wrapper around the matrix element calculator;
+    useful for testing.  You can start an interactive session via:
 
-where `key` is defined in Section 3 and `value` is the value of the matrix
-element.
+    ```sh-session
+    $ python -i ./clh2of.py
+    ```
 
-### 2. Binary format
+  - `./clh2of_table.py`: A tiny Python library for accessing matrix elements in keyed formats.
 
-Matrix elements are stored as an undelimited sequence of rows, each containing
-two cells in the following form:
-
-    <key:Int64> <value:Float64>
-
-where `key` is defined in Section 3 and `value` is the value of the matrix
-element.  The cells are stored the *native representation*, which means that
-these matrix elements may not portable across different platforms.
-
-Hence, each row is 16 bytes (128 bits).  The rows are stored in ascending
-order by `key`.
-
-### 3. Key function
-
-A key is constructed from the indices of the matrix element
-
-    ⟨(n1, ml1), (n2, ml2) | V | (n3, ml3), (n4, ml4)⟩ =
-      ∫[d r] ∫[d r']
-        phi[n1, ml1](r) phi[n2, ml2](r')
-        phi[n3, ml3](r) phi[n4, ml4](r')
-
-Firstly, each pair `n` and `ml` is fused using the function:
-
-    f(n, ml) = (k * (k + 2) + ml) / 2
-      where k = 2 * n + abs(ml)
-
-(The division by two always results in an integer.)
-
-Then, the fused pairs `p = f(n, ml)` are rearranged such that
-
-    (r1, r2) ≤ sort(r3, r4) && r1 ≤ r2
-
-is satisfied; here, we define
-
-    sort(r3, r4) =
-      if r3 ≤ r4
-      then (r3, r4)
-      else (r4, r3)
-
-and `(r1, r2, r3, r4)` to be some permutation of `(p1, p2, p3, p4)` generated
-from some combination of `(1 2) (3 4)` and/or `(1 3) (2 4)`.
-
-Finally, each `r`, treated as a 16-bit integer, is bitwise concatenated into a
-64-bit integer:
-
-    key =
-      left_shift(r1, 48) +
-      left_shift(r2, 32) +
-      left_shift(r3, 16) +
-                 r4
-
-Note that the indices nearer to the left are stored in the higher bits.  Since
-most architectures are little-endian, this means the indices are often stored
-in reverse order.
-
-A concrete implementation of the key function can be found in as
-`clh2of_table.py`, where it is called `_construct_key`.
-
-[rl]: https://github.com/xrf/clh2-openfci/releases
-[of]: https://github.com/xrf/simen-openfci
+  - `./example.py`: An example that demonstrates the use of `clh2of_table.py`.

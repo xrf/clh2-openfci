@@ -12,9 +12,9 @@ def _construct_key(n1, ml1, n2, ml2, n3, ml3, n4, ml4):
     p4 = _orbital_index(n4, ml4)
     if sorted((p1, p2)) > sorted((p3, p4)):
         p1, p2, p3, p4 = p3, p4, p1, p2
-    if p1 > p2:
+    if p1 > p2 or (p1 == p2 and p3 > p4):
         p1, p2, p3, p4 = p2, p1, p4, p3
-    return (p1 << 48 ^ p2 << 32 ^ p3 << 16 ^ p4)
+    return p1 << 48 ^ p2 << 32 ^ p3 << 16 ^ p4
 
 class TableSqlite(object):
 

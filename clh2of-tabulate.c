@@ -79,7 +79,7 @@ static sqlite3_int64 canonicalize(struct clh2of_ix *ix)
     const unsigned long
         p12 = ordered_fuse(p1, p2),
         p34 = ordered_fuse(p3, p4);
-    if ((p1 > p2 && (p1 == p2 || p3 > p4)) || p12 > p34)
+    if (p1 > p2 || (p1 == p2 && p3 > p4) || p12 > p34)
         return -1;
     return
         (sqlite3_int64)p1 << 48 ^
